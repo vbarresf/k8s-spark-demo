@@ -15,7 +15,7 @@ import logging
 conf = SparkConf()
 
 # Change to remote Spark master URL
-conf.setMaster("spark://spark-deployment-5b45b469d-czhxt:7077")
+conf.setMaster("spark://34.27.111.214:7077")
 conf.set("spark.jars", "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar")
 
 

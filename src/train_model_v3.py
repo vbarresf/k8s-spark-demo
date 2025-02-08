@@ -1,3 +1,4 @@
+import pyspark
 from pyspark import SparkContext
 from pyspark.conf import SparkConf
 from pyspark.sql.types import *
@@ -14,15 +15,10 @@ import logging
 
 conf = SparkConf()
 
-# Change to remote Spark master URL
-conf.setMaster("spark://spark-deployment-5b45b469d-czhxt:7077")
-conf.set("spark.jars", "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar")
+spark = pyspark.sql.SparkSession.builder.appName('trainModelv3').config("spark.jars", "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar").getOrCreate()
+sc = spark.sparkContext
 
-
-sc = SparkContext(conf=conf)
 spark = SQLContext(sc)
-
-
 
 train_schema = StructType([
   StructField('date', DateType()),
