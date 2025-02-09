@@ -1,0 +1,27 @@
+fernetKey: ceCOxl_LPv5iEt9tXbrpVsTzHRFE7uqq9wmZvFOcMQ0=
+
+airflow:
+  dagsFolder: /usr/local/airflow/dags
+  pluginsFolder: /usr/local/airflow/plugins
+  image: gcr.io/{{ .projectId }}/airflow-gke:latest
+
+db:
+  region: us-central1
+  instance: airflow-psql
+
+web:
+  name: web
+  commandArgs: ["webserver"]
+
+scheduler:
+  name: scheduler
+  commandArgs: ["scheduler"]
+
+workers:
+  name: worker
+  replicas: 2
+  commandArgs: ["worker"]
+
+flower:
+  name: flower
+  commandArgs: ["flower"]

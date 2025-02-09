@@ -1,0 +1,58 @@
+{{- define "dbinstances" -}}
+  {{ .Values.projectId }}:{{ .Values.db.region }}:{{ .Values.db.instance }}
+{{- end -}}
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: postgres
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: postgres
+    spec:
+      serviceAccountName: worker
+      restartPolicy: Always
+      containers:
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/cloud_sql_proxy", "-instances={{ template "dbinstances" . }}=tcp:0.0.0.0:5432",]
+          ports:
+            - name: postgres
+              containerPort: 5432
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: redis
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: redis
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: redis
+          image: redis:3.0-alpine
+          ports:
+            - name: redis
+              containerPort: 6379
+          volumeMounts:
+            - name: redis-disk
+              mountPath: /data/redis
+      volumes:
+        - name: redis-disk
+          gcePersistentDisk:
+            pdName: airflow-redis-disk
+            fsType: ext4

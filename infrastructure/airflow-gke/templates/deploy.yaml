@@ -1,0 +1,59 @@
+{{- define "airflow" -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .name }}
+spec:
+  serviceName: {{ .name }}
+  replicas: {{ .replicas | default 1 }}
+  selector:
+    matchLabels:
+      tier: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: {{ .name }}
+    spec:
+      restartPolicy: Always
+      serviceAccountName: worker
+      containers:
+        - name: web
+          image: gcr.io/{{ .projectId }}/airflow-gke:latest
+          ports:
+            - name: web
+              containerPort: 8080
+            - name: logs
+              containerPort: 8793
+          envFrom:
+          - configMapRef:
+              name: config-airflow
+          {{- if eq .name "web" }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+          {{- end }}
+          command: ["/entrypoint.sh"]
+          args:  {{ .commandArgs }}
+{{- end -}}
+
+{{- $_ := set .Values.web "projectId" .Values.projectId }}
+{{- template "airflow" .Values.web }}
+---
+{{- $_ := set .Values.scheduler "projectId" .Values.projectId }}
+{{- template "airflow" .Values.scheduler }}
+---
+{{- $_ := set .Values.workers "projectId" .Values.projectId }}
+{{- template "airflow" .Values.workers }}
+---
+{{- $_ := set .Values.flower "projectId" .Values.projectId }}
+{{- template "airflow" .Values.flower }}
